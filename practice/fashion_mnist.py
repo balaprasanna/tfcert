@@ -3,16 +3,6 @@ from tensorflow import keras
 import numpy as np
 
 
-class Dataset(object):
-
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-    def show_batch(self, bs=1):
-        pass
-
-
 class MyCallback(keras.callbacks.Callback):
     def on_epoch_begin(self, epoch, logs=None):
         lr = self.model.optimizer._get_hyper("learning_rate").value()
