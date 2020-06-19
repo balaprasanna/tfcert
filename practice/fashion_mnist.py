@@ -1,12 +1,11 @@
 import tensorflow as tf
 from tensorflow import keras
-import numpy as np
 
 
 class MyCallback(keras.callbacks.Callback):
     def on_epoch_begin(self, epoch, logs=None):
         lr = self.model.optimizer._get_hyper("learning_rate").value()
-        self.model.optimizer._set_hyper("learning_rate", lr/2.)
+        self.model.optimizer._set_hyper("learning_rate", lr / 2.)
         newlr = self.model.optimizer._get_hyper("learning_rate").value()
         print(f"lr => {lr} ,  newlr: => {newlr}")
 
@@ -51,13 +50,11 @@ class FashionMnistModel(object):
             print(f"Predicted {yhat}")
 
 
-
 def main(*args):
-
     fashion_mnist = keras.datasets.fashion_mnist
     (x_train, y_train), (x_test, y_test) = fashion_mnist.load_data()
 
-    x_train = x_train/255.0
+    x_train = x_train / 255.0
     x_test = x_test / 255.0
 
     model = FashionMnistModel()
@@ -66,7 +63,6 @@ def main(*args):
     model.fit(x_train, y_train, epochs=10, cbs=cbs)
     model.predict(x_test[6:7], y_test[6:7])
     print(f"Acc:  {model.model.evaluate(x_test, y_test)}")
-
 
 
 if __name__ == '__main__':
