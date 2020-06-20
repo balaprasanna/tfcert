@@ -10,8 +10,9 @@ class StopTrainingCb(keras.callbacks.Callback):
 
     def on_epoch_end(self, epoch, logs={}):
         print(logs)
-        acc = logs.get('acc')
-        if acc > 0.99:
+        train_acc = logs.get('acc')
+        acc = logs.get('val_acc')
+        if train_acc >= 0.9 and acc > 0.6:
             print(f"Stop training since its reaches 99% Acc: => {acc}")
             self.model.stop_training = True
 
@@ -59,11 +60,19 @@ class HappySadModel(object):
         else:
             self.model.fit(x, y, epochs=epochs)
 
-    def fit_generator(self, train_gen, epochs=10):
-        self.model.fit_generator(train_gen,
-                                 steps_per_epoch=2,
-                                 epochs=epochs,
-                                 callbacks=self.cbs)
+    def fit_generator(self, train_gen, valid_data_gen=None,  epochs=10):
+        if valid_data_gen:
+            self.model.fit_generator(train_gen,
+                                     steps_per_epoch=2,
+                                     epochs=epochs,
+                                     validation_data=valid_data_gen,
+                                     validation_steps=2,
+                                     callbacks=self.cbs)
+        else:
+            self.model.fit_generator(train_gen,
+                                     steps_per_epoch=2,
+                                     epochs=epochs,
+                                     callbacks=self.cbs)
 
     def evaluate(self, x_test, y_test):
         return self.model.evaluate(x_test, y_test)
@@ -100,12 +109,20 @@ if __name__ == '__main__':
                                        target_size=(128, 128),
                                        batch_size=10,
                                        class_mode="binary")
+    valid_data_dir = "/opt/localtmp/dataset/happy-sad-valid"
+    valid_data_gen = ImageDataGenerator(rescale=1. / 255)
+    valid_data_gen = valid_data_gen.flow_from_directory(valid_data_dir,
+                                                        target_size=(128, 128),
+                                                        batch_size=10,
+                                                        class_mode="binary"
+                                                        )
+
     callback = StopTrainingCb()
     model = HappySadModel()
     model.compile()
     # model.model.summary()
     model.register_callbacks(callback)
-    model.fit_generator(train_data_gen, epochs=20)
+    model.fit_generator(train_data_gen, valid_data_gen, epochs=20)
     # model.predict_in_colab()
     e = time.time()
     print(f"It took {e-s} seconds")
