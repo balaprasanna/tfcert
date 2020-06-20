@@ -2,7 +2,9 @@ import tensorflow as tf
 from tensorflow import keras
 import time
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-
+from tensorflow.keras.preprocessing import image
+import io
+import numpy as np
 
 class StopTrainingCb(keras.callbacks.Callback):
 
@@ -30,7 +32,9 @@ class HappySadModel(object):
     def model_arch(self):
         return tf.keras.Sequential(
             layers=[
-                keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu, input_shape=(128, 128, 3)),
+                keras.layers.Conv2D(filters=32, kernel_size=(3, 3), activation=tf.nn.relu, input_shape=(128, 128, 3)),
+                keras.layers.MaxPooling2D(pool_size=(2, 2)),
+                keras.layers.Conv2D(filters=64, kernel_size=(3, 3), activation=tf.nn.relu),
                 keras.layers.MaxPooling2D(pool_size=(2, 2)),
                 keras.layers.Conv2D(filters=128, kernel_size=(3, 3), activation=tf.nn.relu),
                 keras.layers.MaxPooling2D(pool_size=(2, 2)),
@@ -70,27 +74,38 @@ class HappySadModel(object):
             print(f"Predicted {yhat.argmax()} vs Actual {y}")
         else:
             print(f"Predicted {yhat}")
+        return yhat
 
-
-def main(*args):
-    train_data_dir = "/opt/localtmp/dataset/happy_sad"
-    train_data_gen = ImageDataGenerator(rescale=1./255)
-    train_data_gen = train_data_gen.flow_from_directory(train_data_dir,
-                                       target_size=(128, 128),
-                                       batch_size=8,
-                                       class_mode="binary")
-
-
-    callback = StopTrainingCb()
-    model = HappySadModel()
-    model.compile()
-    model.model.summary()
-    model.register_callbacks(callback)
-    model.fit_generator(train_data_gen, epochs=20)
+    def predict_in_colab(self):
+        from google.colab import files
+        uploaded = files.upload()
+        for k, v in uploaded.items():
+            fname = f"/content/{k}"
+            print(fname)
+            img = image.load_img(fname, target_size=(128, 128))
+            x = image.img_to_array(img)
+            x = np.expand_dims(x, 0)
+            res = model.model.predict(x)
+            print(f"file {k} output {res}")
+            # v = uploaded['happy.jpeg']
+            # img = Image.open(io.BytesIO(v))
+            # out[k]=img
 
 
 if __name__ == '__main__':
     s = time.time()
-    main()
+    train_data_dir = "/opt/localtmp/dataset/happy_sad"
+    train_data_gen = ImageDataGenerator(rescale=1./255)
+    train_data_gen = train_data_gen.flow_from_directory(train_data_dir,
+                                       target_size=(128, 128),
+                                       batch_size=10,
+                                       class_mode="binary")
+    callback = StopTrainingCb()
+    model = HappySadModel()
+    model.compile()
+    # model.model.summary()
+    model.register_callbacks(callback)
+    model.fit_generator(train_data_gen, epochs=20)
+    # model.predict_in_colab()
     e = time.time()
     print(f"It took {e-s} seconds")
