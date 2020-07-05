@@ -24,8 +24,8 @@ def setup():
 
 
 class SignLanguage(Trainer):
-    def __init__(self, input_shape, n_classes):
-        super(SignLanguage, self).__init__(input_shape, n_classes)
+    def __init__(self, input_shape, n_classes, is_targets_one_hot_encoded):
+        super(SignLanguage, self).__init__(input_shape, n_classes, is_targets_one_hot_encoded)
 
     # def model_arch(self):
     #     return self.model_arch_v3()
@@ -110,7 +110,9 @@ def main():
     valid_gen_obj = valid_gen.flow(test_x, test_y, batch_size=32)
 
     input_shape = (28, 28, 1)
-    l = SignLanguage(input_shape=input_shape, n_classes=26)
+    l = SignLanguage(input_shape=input_shape,
+                     n_classes=26,
+                     is_targets_one_hot_encoded=False)
     l.register_callbacks(StopTrainingCb())
     l.compile()
     l.model.summary()

@@ -27,7 +27,7 @@ def predict_in_colab(model):
 # =================
 class Trainer(object):
 
-    def __init__(self, input_shape, n_classes):
+    def __init__(self, input_shape, n_classes, is_targets_one_hot_encoded=True):
         self.input_shape = input_shape  # (128, 128, 3)
         self.n_classes = n_classes
         self.optimizer = keras.optimizers.Adam()
@@ -39,7 +39,14 @@ class Trainer(object):
         # interal stuff
         self.cbs = None
         self.final_layer_activation = tf.nn.softmax if self.n_classes > 1 else tf.nn.sigmoid
-        self.loss = keras.losses.sparse_categorical_crossentropy if self.n_classes > 1 else keras.losses.binary_crossentropy
+
+        if self.n_classes > 1:
+            if is_targets_one_hot_encoded:
+                self.loss = keras.losses.categorical_crossentropy
+            else:
+                self.loss = keras.losses.sparse_categorical_crossentropy
+        else:
+            self.loss = keras.losses.binary_crossentropy
 
         self.model = self.model_arch()
 
