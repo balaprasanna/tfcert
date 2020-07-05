@@ -8,14 +8,36 @@ from pathlib import Path
 # UTILS BEGIN
 # from .modelutils import Trainer, StopTrainingCb
 from modelutils import Trainer, StopTrainingCb
+
+
 # UTILS END
 
 class DogVsCat(Trainer):
     def __init__(self, input_shape, n_classes):
         super(DogVsCat, self).__init__(input_shape, n_classes)
-        
+        self.model_arch()
+
     def model_arch(self):
-        return super(DogVsCat, self).model_arch()
+        return self.model_arch_v2()
+
+    def model_arch_v2(self):
+        base_model = tf.keras.applications.inception_v3.InceptionV3(
+            input_shape=self.input_shape,
+            include_top=False,
+            weights=None)
+        weights_file = "/home/prasanna/Downloads/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
+        base_model.load_weights(weights_file)
+        for layer in base_model.layers:
+            layer.trainable = False
+        last_layer = base_model.get_layer("mixed7")
+        last_output = last_layer.output
+
+        x = tf.keras.layers.Flatten()(last_output)
+        x = tf.keras.layers.Dense(1024, activation="relu")(x)
+        x = tf.keras.layers.Dense(1, activation="sigmoid")(x)
+        model = tf.keras.Model(base_model.input, x)
+        self.model = model
+        return model
 
 
 def get_y_labels(x):
@@ -51,7 +73,8 @@ def main():
                                          height_shift_range=.2,
                                          shear_range=.2,
                                          zoom_range=.2,
-                                         vertical_flip=True)
+                                         vertical_flip=True,
+                                         preprocessing_function=tf.keras.applications.inception_v3.preprocess_input)
 
     train_gen_obj = train_gen.flow_from_dataframe(dataset[dataset.is_valid == 0],
                                                   directory=base_train_dir_path,
@@ -63,7 +86,8 @@ def main():
                                                   has_ext=True
                                                   )
 
-    valid_gen = image.ImageDataGenerator(rescale=1 / 255.)
+    valid_gen = image.ImageDataGenerator(rescale=1 / 255.,
+                                         preprocessing_function=tf.keras.applications.inception_v3.preprocess_input)
     valid_gen_obj = valid_gen.flow_from_dataframe(dataset[dataset.is_valid == 1],
                                                   directory=base_train_dir_path,
                                                   x_col="filename",
