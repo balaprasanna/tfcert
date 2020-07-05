@@ -69,11 +69,16 @@ class SignLanguage(Trainer):
         self.model = keras.Model(inputs, outputs)
 
     def plot_history(self):
-        pio.renderers.default = "browser"  # colab
         history_df = pd.DataFrame(self.history.history)
         print(history_df)
-        fig = px.line(history_df)
-        fig.show()
+        try:
+            pio.renderers.default = "browser"  # colab
+            fig = px.line(history_df)
+            fig.show()
+        except Exception as e:
+            pio.renderers.default = "colab"
+            fig = px.line(history_df)
+            fig.show()
 
 
 def get_y_labels(x):
@@ -82,10 +87,11 @@ def get_y_labels(x):
 
 
 def main():
-    batch_size = 32
+    batch_size = 64
+
     input_shape = (28, 28, 1)
     n_classes = 26
-    epochs = 20
+    epochs = 30
 
     train_path = "/tmp/sign_mnist_train.csv"
     test_path = "/tmp/sign_mnist_test.csv"
@@ -134,4 +140,3 @@ if __name__ == '__main__':
     # once
     setup()
     main()
-
