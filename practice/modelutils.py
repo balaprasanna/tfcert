@@ -39,7 +39,7 @@ class Trainer(object):
         # interal stuff
         self.cbs = None
         self.final_layer_activation = tf.nn.softmax if self.n_classes > 1 else tf.nn.sigmoid
-        self.loss = keras.losses.categorical_crossentropy if self.n_classes > 1 else  keras.losses.binary_crossentropy
+        self.loss = keras.losses.sparse_categorical_crossentropy if self.n_classes > 1 else keras.losses.binary_crossentropy
 
         self.model = self.model_arch()
 
