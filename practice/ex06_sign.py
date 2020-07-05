@@ -68,6 +68,7 @@ class SignLanguage(Trainer):
     def plot_history(self):
         pio.renderers.default = "browser" #colab
         history_df = pd.DataFrame(self.history.history)
+        print(history_df)
         fig = px.line(history_df)
         fig.show()
 
